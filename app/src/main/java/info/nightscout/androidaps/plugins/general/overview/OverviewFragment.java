@@ -110,6 +110,7 @@ import info.nightscout.androidaps.plugins.iob.iobCobCalculator.CobInfo;
 import info.nightscout.androidaps.plugins.iob.iobCobCalculator.IobCobCalculatorPlugin;
 import info.nightscout.androidaps.plugins.iob.iobCobCalculator.events.EventAutosensCalculationFinished;
 import info.nightscout.androidaps.plugins.iob.iobCobCalculator.events.EventIobCalculationProgress;
+import info.nightscout.androidaps.plugins.pump.common.defs.PumpType;
 import info.nightscout.androidaps.plugins.source.SourceDexcomG5Plugin;
 import info.nightscout.androidaps.plugins.source.SourceDexcomG6Plugin;
 import info.nightscout.androidaps.plugins.source.SourceXdripPlugin;
@@ -183,6 +184,7 @@ public class OverviewFragment extends Fragment implements View.OnClickListener, 
     SingleClickButton insulinButton;
     SingleClickButton carbsButton;
     SingleClickButton cgmButton;
+    SingleClickButton omnicoreButton;
     SingleClickButton quickWizardButton;
 
     boolean smallWidth;
@@ -299,6 +301,10 @@ public class OverviewFragment extends Fragment implements View.OnClickListener, 
         cgmButton = (SingleClickButton) view.findViewById(R.id.overview_cgmbutton);
         if (cgmButton != null)
             cgmButton.setOnClickListener(this);
+
+        omnicoreButton = (SingleClickButton) view.findViewById(R.id.overview_omnicorebutton);
+        if (omnicoreButton != null)
+            omnicoreButton.setOnClickListener(this);
 
         acceptTempLayout = (LinearLayout) view.findViewById(R.id.overview_accepttemplayout);
 
@@ -708,6 +714,9 @@ public class OverviewFragment extends Fragment implements View.OnClickListener, 
                 else if (g6 && units.equals(Constants.MMOL))
                     openCgmApp("com.dexcom.g6.region3.mmol");
                 break;
+            case R.id.overview_omnicorebutton:
+                    openOmnicore("net.balya.OmniCore.Mobile.Android");
+                break;
             case R.id.overview_treatmentbutton:
                 NewTreatmentDialog treatmentDialogFragment = new NewTreatmentDialog();
                 treatmentDialogFragment.show(manager, "TreatmentDialog");
@@ -744,6 +753,27 @@ public class OverviewFragment extends Fragment implements View.OnClickListener, 
             return false;
         }
     }
+
+
+    public boolean openOmnicore(String packageName) {
+        PackageManager packageManager = getContext().getPackageManager();
+        try {
+            Intent intent = packageManager.getLaunchIntentForPackage(packageName);
+            if (intent == null) {
+                throw new ActivityNotFoundException();
+            }
+            intent.addCategory(Intent.CATEGORY_LAUNCHER);
+            getContext().startActivity(intent);
+            return true;
+        } catch (ActivityNotFoundException e) {
+            new AlertDialog.Builder(getContext())
+                    .setMessage(R.string.error_starting_omnicore)
+                    .setPositiveButton("OK", null)
+                    .show();
+            return false;
+        }
+    }
+
 
     @Override
     public boolean onLongClick(View v) {
@@ -1206,6 +1236,14 @@ public class OverviewFragment extends Fragment implements View.OnClickListener, 
                 cgmButton.setVisibility(View.VISIBLE);
             } else {
                 cgmButton.setVisibility(View.GONE);
+            }
+        }
+
+        if (omnicoreButton != null) {
+            if ((ConfigBuilderPlugin.getPlugin().getActivePump().getPumpDescription().pumpType == PumpType.Omnipy_Omnipod) && SP.getBoolean(R.string.key_show_omnicore_button, false)) {
+                omnicoreButton.setVisibility(View.VISIBLE);
+            } else {
+                omnicoreButton.setVisibility(View.GONE);
             }
         }
 

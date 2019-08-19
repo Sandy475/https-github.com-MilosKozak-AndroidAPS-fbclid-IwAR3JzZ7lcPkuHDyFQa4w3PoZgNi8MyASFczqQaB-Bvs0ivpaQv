@@ -61,8 +61,7 @@ public class OmnipodPdm {
 
     private OmniCoreResult _lastResult;
     private Timer _omniCoreTimer;
-    private boolean _connected;
-    private boolean _connectionStatusKnown;
+    private OmniCoreServiceConnection _serviceConnection;
 
     private final Logger _log;
 
@@ -70,6 +69,7 @@ public class OmnipodPdm {
     {
         _context = context;
         _log =  LoggerFactory.getLogger(L.PUMP);
+        _serviceConnection = new OmniCoreServiceConnection(context);
     }
 
     public void OnStart() {
@@ -85,9 +85,6 @@ public class OmnipodPdm {
             }
             SP.putString(R.string.key_omnicore_last_result, _lastResult.asJson());
         }
-        _lastResult.LastResultDateTime = 0;
-        _connectionStatusKnown = false;
-        getResult(new OmniCoreStatusRequest());
     }
 
     public void OnStop() {
@@ -109,14 +106,15 @@ public class OmnipodPdm {
     }
 
     public boolean IsConnected() {
-        return _connectionStatusKnown && _connected;
+        return _serviceConnection.IsConnected();
     }
 
     public void Connect() {
+        _serviceConnection.Connect();
     }
 
     public boolean IsConnecting() {
-        return false;
+        return _serviceConnection.IsConnecting();
     }
 
     public void StopConnecting() {
@@ -128,7 +126,9 @@ public class OmnipodPdm {
         return false;
     }
 
-    public void Disconnect() {}
+    public void Disconnect() {
+        _serviceConnection.Disconnect();
+    }
 
     public synchronized OmniCoreResult getResult(OmniCoreRequest request) {
 
@@ -138,20 +138,9 @@ public class OmnipodPdm {
             _omniCoreTimer = null;
         }
 
-        OmniCoreResult result = request.getRemoteResult(_lastResult.LastResultDateTime);
+        OmniCoreResult result = _serviceConnection.GetResult(request);
 
         if (result != null) {
-
-            if (!_connected || !_connectionStatusKnown)
-            {
-                MainApp.bus().post(new EventDismissNotification(Notification.OMNIPY_CONNECTION_STATUS));
-                Notification notification = new Notification(Notification.OMNIPY_CONNECTION_STATUS,
-                        MainApp.gs(R.string.omnicore_connected), Notification.INFO, 1);
-                MainApp.bus().post(new EventNewNotification(notification));
-            }
-            _connectionStatusKnown = true;
-            _connected = true;
-
             if (_lastResult.LastResultDateTime == 0)
                 processHistory(result, false);
             else
@@ -173,37 +162,25 @@ public class OmnipodPdm {
             SP.putString(R.string.key_omnicore_last_result, _lastResult.asJson());
             _lastResult = result;
         }
-        else
-        {
-            if (_connected || !_connectionStatusKnown)
-            {
-                MainApp.bus().post(new EventDismissNotification(Notification.OMNIPY_CONNECTION_STATUS));
-                Notification notification = new Notification(Notification.OMNIPY_CONNECTION_STATUS,
-                        MainApp.gs(R.string.omnicore_not_connected), Notification.NORMAL, 60);
-                MainApp.bus().post(new EventNewNotification(notification));
-            }
-            _connectionStatusKnown = true;
-            _connected = false;
-        }
 
         MainApp.bus().post(new EventOmnipodUpdateGui());
 
-        long delay = 60000;
-        if (_connected) {
+        if (IsConnected()) {
+            long delay;
             if (_lastResult.PodRunning)
                 delay = 150000;
             else
                 delay = 30000;
-        }
 
-        _omniCoreTimer = new Timer();
-        _omniCoreTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                _omniCoreTimer = null;
-                getResult(new OmniCoreStatusRequest());
-            }
-        }, delay);
+            _omniCoreTimer = new Timer();
+            _omniCoreTimer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    _omniCoreTimer = null;
+                    getResult(new OmniCoreStatusRequest());
+                }
+            }, delay);
+        }
 
         return result;
     }

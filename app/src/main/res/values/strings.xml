@@ -966,6 +966,13 @@
     <string name="key_show_treatment_button" translatable="false">show_treatment_button</string>
     <string name="show_calibration_button_summary">Sends a calibration to xDrip+ or open G5 calibration dialog</string>
     <string name="show_cgm_button_summary">Opens xDrip+, back buttons returns to AAPS</string>
+
+    <string name="show_omnicore_button_summary">Enable Omnicore button in Overview tab</string>
+    <string name="key_show_omnicore_button" translatable="false">show_omnicore_button</string>
+    <string name="omnicore_button">OmniCore Button</string>
+    <string name="overview_omnicore">OmniCore</string>
+    <string name="error_starting_omnicore">Error starting OmniCore. Make sure it is installed.</string>
+
     <string name="key_insulin_button_increment_1" translatable="false">insulin_button_increment_1</string>
     <string name="key_insulin_button_increment_2" translatable="false">insulin_button_increment_2</string>
     <string name="key_insulin_button_increment_3" translatable="false">insulin_button_increment_3</string>
@@ -1398,7 +1405,6 @@
     <string name="omnipod_shortname">Omni</string>
     <string name="omnipod_description">Plugin to connect to OmniCore</string>
 
-
     <string name="omnipy_connection_status">Connection Status</string>
 
     <string name="omnipod_pod_connection_status_check_connection">Check Connection</string>
@@ -1558,7 +1564,7 @@
     <string name="key_omnipod_currentpodid">omnipod_currentpodid</string>
 
     <string name="omnicore_connected">Connected to OmniCore</string>
-    <string name="omnicore_not_connected">Not connected to OmniCore</string>
+    <string name="omnicore_not_connected">Disconnected from OmniCore</string>
     <string name="key_omnicore_last_result">omnicore_last_result</string>
 
 

@@ -122,6 +122,8 @@
                 android:summary="@string/show_cgm_button_summary"
                 android:title="@string/cgm" />
 
+
+
             <SwitchPreference
                 android:defaultValue="true"
                 android:key="@string/key_show_calibration_button"

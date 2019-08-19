@@ -507,6 +507,21 @@
                     android:visibility="gone" />
 
                 <info.nightscout.androidaps.utils.SingleClickButton
+                    android:id="@+id/overview_omnicorebutton"
+                    style="?android:attr/buttonStyle"
+                    android:layout_width="0px"
+                    android:layout_height="fill_parent"
+                    android:layout_marginRight="-4dp"
+                    android:layout_weight="0.5"
+                    android:drawableTop="@drawable/icon_omnicore"
+                    android:paddingLeft="0dp"
+                    android:paddingRight="0dp"
+                    android:text="@string/overview_omnicore"
+                    android:textColor="@color/colorOmnicoreButton"
+                    android:textSize="10sp"
+                    android:visibility="gone" />
+
+                <info.nightscout.androidaps.utils.SingleClickButton
                     android:id="@+id/overview_quickwizardbutton"
                     style="?android:attr/buttonStyle"
                     android:layout_width="0px"

@@ -52,6 +52,8 @@
     <color name="colorCarbsButton">#ffae01</color>
     <color name="colorCalibrationButton">#e93057</color>
     <color name="colorCalculatorButton">#67e86a</color>
+    <color name="colorOmnicoreButton">#29b1d0</color>
+
     <color name="colorQuickWizardButton">#ffae01</color>
     <color name="colorSetTempButton">#FF478EFF</color>
     <color name="colorSetExtendedButton">#FFDD7792</color>
