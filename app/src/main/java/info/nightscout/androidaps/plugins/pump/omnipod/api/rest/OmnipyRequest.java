@@ -16,7 +16,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import info.nightscout.androidaps.MainApp;
+import info.nightscout.androidaps.plugins.bus.RxBus;
+
+//import info.nightscout.androidaps.MainApp;
 import info.nightscout.androidaps.plugins.pump.omnipod.api.OmnipyApiSecret;
 import info.nightscout.androidaps.plugins.pump.omnipod.api.OmnipyApiToken;
 import info.nightscout.androidaps.plugins.pump.omnipod.events.EventOmnipyApiResult;
@@ -131,7 +133,7 @@ public class OmnipyRequest {
                 e.printStackTrace();
             }
         }
-        MainApp.bus().post(new EventOmnipyApiResult(result));
+        RxBus.INSTANCE.send(new EventOmnipyApiResult(result));
     }
 
     public URL getUrl() throws MalformedURLException {
@@ -251,7 +253,7 @@ class OmnipyRequestTask extends AsyncTask<String, Void, OmnipyResult> {
                 e.printStackTrace();
             }
         }
-        MainApp.bus().post(new EventOmnipyApiResult(result));
+        RxBus.INSTANCE.send(new EventOmnipyApiResult(result));
     }
 
     private String readStream(InputStream in) throws IOException {

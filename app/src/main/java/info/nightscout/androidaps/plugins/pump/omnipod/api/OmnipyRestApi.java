@@ -34,6 +34,7 @@ import info.nightscout.androidaps.MainApp;
 import info.nightscout.androidaps.R;
 import info.nightscout.androidaps.events.EventPreferenceChange;
 import info.nightscout.androidaps.logging.L;
+import info.nightscout.androidaps.plugins.bus.RxBus;
 import info.nightscout.androidaps.plugins.general.overview.events.EventDismissNotification;
 import info.nightscout.androidaps.plugins.general.overview.events.EventNewNotification;
 import info.nightscout.androidaps.plugins.general.overview.notifications.Notification;
@@ -329,18 +330,18 @@ public class OmnipyRestApi {
 
         if (SP.getBoolean(R.string.key_omnipy_autodetect_host, true))
         {
-            MainApp.bus().post(new EventDismissNotification(Notification.OMNIPY_CONNECTION_STATUS));
+            RxBus.INSTANCE.send(new EventDismissNotification(Notification.OMNIPY_CONNECTION_STATUS));
             Notification notification = new Notification(Notification.OMNIPY_CONNECTION_STATUS, MainApp.gs(R.string.Searching_for_omnipy_on_local_network), Notification.NORMAL, 1);    //"Searching for omnipy on local network.."
-            MainApp.bus().post(new EventNewNotification(notification));
+            RxBus.INSTANCE.send(new EventNewNotification(notification));
 
         }
         else
         {
             String omnipyHost = SP.getString(R.string.key_omnipy_host, null);
             if (omnipyHost != null && omnipyHost.length() == 0) {
-                MainApp.bus().post(new EventDismissNotification(Notification.OMNIPY_CONNECTION_STATUS));
+                RxBus.INSTANCE.send(new EventDismissNotification(Notification.OMNIPY_CONNECTION_STATUS));
                 Notification notification = new Notification(Notification.OMNIPY_CONNECTION_STATUS, MainApp.gs(R.string.Trying_to_connect_to_omnipy_at_address) + omnipyHost, Notification.INFO, 1);    //"Trying to connect to omnipy at address:"
-                MainApp.bus().post(new EventNewNotification(notification));
+                RxBus.INSTANCE.send(new EventNewNotification(notification));
             }
         }
 
@@ -364,7 +365,7 @@ public class OmnipyRestApi {
         _configuring = false;
         _configured = true;
 
-        MainApp.bus().post(confResult);
+        RxBus.INSTANCE.send(confResult);
     }
 
     @Subscribe

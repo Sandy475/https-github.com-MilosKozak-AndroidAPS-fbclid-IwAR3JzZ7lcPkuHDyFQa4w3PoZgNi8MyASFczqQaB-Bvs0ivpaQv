@@ -3,7 +3,7 @@ package info.nightscout.androidaps.plugins.pump.omnipod;
 import android.content.Context;
 import android.os.SystemClock;
 
-import com.squareup.otto.Subscribe;
+//import com.squareup.otto.Subscribe;
 
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -27,7 +27,9 @@ import info.nightscout.androidaps.interfaces.PluginType;
 import info.nightscout.androidaps.interfaces.PumpDescription;
 import info.nightscout.androidaps.interfaces.PumpInterface;
 import info.nightscout.androidaps.logging.L;
+import info.nightscout.androidaps.plugins.bus.RxBus;
 import info.nightscout.androidaps.plugins.aps.loop.LoopPlugin;
+import info.nightscout.androidaps.plugins.common.ManufacturerType;
 import info.nightscout.androidaps.plugins.general.actions.defs.CustomAction;
 import info.nightscout.androidaps.plugins.general.actions.defs.CustomActionType;
 import info.nightscout.androidaps.plugins.general.overview.events.EventDismissNotification;
@@ -39,6 +41,7 @@ import info.nightscout.androidaps.plugins.pump.omnipod.api.rest.OmnipyResult;
 import info.nightscout.androidaps.plugins.pump.omnipod.events.EventOmnipodUpdateGui;
 import info.nightscout.androidaps.plugins.treatments.TreatmentsPlugin;
 import info.nightscout.androidaps.utils.DateUtil;
+import info.nightscout.androidaps.utils.InstanceId;
 import info.nightscout.androidaps.utils.SP;
 
 
@@ -100,7 +103,7 @@ public class OmnipodPlugin extends PluginBase implements PumpInterface {
 
     @Subscribe
     public void onStatusEvent(final EventNetworkChange enc) {
-        MainApp.bus().post(new EventOmnipodUpdateGui());
+        RxBus.INSTANCE.send(new EventOmnipodUpdateGui());
     }
 
     public OmnipodPdm getPdm()
@@ -139,7 +142,7 @@ public class OmnipodPlugin extends PluginBase implements PumpInterface {
     @Override
     public void connect(String reason) {
         _pdm.Connect();
-        MainApp.bus().post(new EventOmnipodUpdateGui());
+        RxBus.INSTANCE.send(new EventOmnipodUpdateGui());
     }
 
     @Override
@@ -231,22 +234,22 @@ public class OmnipodPlugin extends PluginBase implements PumpInterface {
             r.enacted = result.success;
             r.success = result.success;
             if (result.success) {
-                MainApp.bus().post(new EventDismissNotification(Notification.PROFILE_SET_OK));
-                MainApp.bus().post(new EventDismissNotification(Notification.PROFILE_SET_FAILED));
+                RxBus.INSTANCE.send(new EventDismissNotification(Notification.PROFILE_SET_OK));
+                RxBus.INSTANCE.send(new EventDismissNotification(Notification.PROFILE_SET_FAILED));
                 Notification notification = new Notification(Notification.PROFILE_SET_OK, MainApp.gs(R.string.profile_set_ok), Notification.INFO, 60);
-                MainApp.bus().post(new EventNewNotification(notification));
+                RxBus.INSTANCE.send(new EventNewNotification(notification));
                 if (warnUser) {
-                    MainApp.bus().post(new EventNewNotification(new Notification(Notification.OMNIPY_TEMP_BASAL_CANCELED,
+                    RxBus.INSTANCE.send(new EventNewNotification(new Notification(Notification.OMNIPY_TEMP_BASAL_CANCELED,
                             "Temporary basal canceled before setting a new basal profile. Please set temporary basal again." , Notification.NORMAL, 60)));
                 }
             } else {
                 r.comment = getCommentString(result);
-                MainApp.bus().post(new EventDismissNotification(Notification.PROFILE_SET_OK));
-                MainApp.bus().post(new EventDismissNotification(Notification.PROFILE_SET_FAILED));
+                RxBus.INSTANCE.send(new EventDismissNotification(Notification.PROFILE_SET_OK));
+                RxBus.INSTANCE.send(new EventDismissNotification(Notification.PROFILE_SET_FAILED));
                 Notification notification = new Notification(Notification.PROFILE_SET_FAILED, "Basal profile not updated", Notification.NORMAL, 60);
-                MainApp.bus().post(new EventNewNotification(notification));
+                RxBus.INSTANCE.send(new EventNewNotification(notification));
                 if (warnUser) {
-                    MainApp.bus().post(new EventNewNotification(new Notification(Notification.OMNIPY_TEMP_BASAL_CANCELED,
+                    RxBus.INSTANCE.send(new EventNewNotification(new Notification(Notification.OMNIPY_TEMP_BASAL_CANCELED,
                             "Temporary basal canceled trying to set a new basal profile. Please set temporary basal again." , Notification.NORMAL, 60)));
                 }
             }
@@ -254,7 +257,7 @@ public class OmnipodPlugin extends PluginBase implements PumpInterface {
         else
         {
             if (warnUser) {
-                MainApp.bus().post(new EventNewNotification(new Notification(Notification.OMNIPY_TEMP_BASAL_CANCELED,
+                RxBus.INSTANCE.send(new EventNewNotification(new Notification(Notification.OMNIPY_TEMP_BASAL_CANCELED,
                         "Temporary basal canceled trying to set a new basal profile. Please set temporary basal again." , Notification.NORMAL, 60)));
             }
         }
@@ -323,22 +326,22 @@ public class OmnipodPlugin extends PluginBase implements PumpInterface {
                 Double delivering = 0.05d;
 
                 while (delivering < detailedBolusInfo.insulin) {
-                    EventOverviewBolusProgress bolusingEvent = EventOverviewBolusProgress.getInstance();
-                    bolusingEvent.status = String.format(MainApp.gs(R.string.bolusdelivering), delivering);
-                    bolusingEvent.percent = Math.min((int) (delivering / detailedBolusInfo.insulin * 100), 100);
-                    MainApp.bus().post(bolusingEvent);
+                    EventOverviewBolusProgress bolusingEvent = EventOverviewBolusProgress.INSTANCE;
+                    bolusingEvent.setStatus(String.format(MainApp.gs(R.string.bolusdelivering), delivering));
+                    bolusingEvent.setPercent(Math.min((int) (delivering / detailedBolusInfo.insulin * 100), 100));
+                    RxBus.INSTANCE.send(bolusingEvent);
                     delivering += 0.05d;
                     SystemClock.sleep(2000);
                 }
                 SystemClock.sleep(200);
-                EventOverviewBolusProgress bolusingEvent = EventOverviewBolusProgress.getInstance();
-                bolusingEvent.status = String.format(MainApp.gs(R.string.bolusdelivered), detailedBolusInfo.insulin);
-                bolusingEvent.percent = 100;
-                MainApp.bus().post(bolusingEvent);
+                EventOverviewBolusProgress bolusingEvent = EventOverviewBolusProgress.INSTANCE;
+                bolusingEvent.setStatus(String.format(MainApp.gs(R.string.bolusdelivered), detailedBolusInfo.insulin));
+                bolusingEvent.setPercent(100);
+                RxBus.INSTANCE.send(bolusingEvent);
                 SystemClock.sleep(1000);
                 if (L.isEnabled(L.PUMPCOMM))
                     log.debug("Delivering treatment insulin: " + detailedBolusInfo.insulin + "U carbs: " + detailedBolusInfo.carbs + "g " + result);
-                MainApp.bus().post(new EventOmnipodUpdateGui());
+                RxBus.INSTANCE.send(new EventOmnipodUpdateGui());
             }
         }
         return r;
@@ -355,20 +358,20 @@ public class OmnipodPlugin extends PluginBase implements PumpInterface {
                     canceled = result.status.insulin_canceled;
                 }
 
-                EventOverviewBolusProgress bolusingEvent = EventOverviewBolusProgress.getInstance();
+                EventOverviewBolusProgress bolusingEvent = EventOverviewBolusProgress.INSTANCE;
 
                 Double supposedToDeliver = _runningBolusInfo.insulin;
                 if (canceled <= 0d) {
                     if (bolusingEvent != null)
-                        bolusingEvent.status = String.format("Couldn't stop bolus in time, delivered: %f.2u", supposedToDeliver);
+                        bolusingEvent.setStatus(String.format("Couldn't stop bolus in time, delivered: %f.2u", supposedToDeliver));
                 } else {
                     if (bolusingEvent != null)
-                        bolusingEvent.status = MainApp.gs(R.string.bolusstopped);
+                        bolusingEvent.setStatus(MainApp.gs(R.string.bolusstopped));
                     _runningBolusInfo.insulin = supposedToDeliver - canceled;
                 }
                 if (bolusingEvent != null) {
-                    MainApp.bus().post(bolusingEvent);
-                    MainApp.bus().post(new EventOmnipodUpdateGui());
+                    RxBus.INSTANCE.send(bolusingEvent);
+                    RxBus.INSTANCE.send(new EventOmnipodUpdateGui());
                 }
                 SystemClock.sleep(100);
                 if (canceled > 0d)
@@ -376,11 +379,11 @@ public class OmnipodPlugin extends PluginBase implements PumpInterface {
                 TreatmentsPlugin.getPlugin().addToHistoryTreatment(_runningBolusInfo, true);
             });
 
-            EventOverviewBolusProgress bolusingEvent = EventOverviewBolusProgress.getInstance();
+            EventOverviewBolusProgress bolusingEvent = EventOverviewBolusProgress.INSTANCE;
             if (bolusingEvent != null) {
-                bolusingEvent.status = MainApp.gs(R.string.bolusstopping);
-                MainApp.bus().post(bolusingEvent);
-                MainApp.bus().post(new EventOmnipodUpdateGui());
+                bolusingEvent.setStatus(MainApp.gs(R.string.bolusstopping));
+                RxBus.INSTANCE.send(bolusingEvent);
+                RxBus.INSTANCE.send(new EventOmnipodUpdateGui());
             }
         }
     }
@@ -419,7 +422,7 @@ public class OmnipodPlugin extends PluginBase implements PumpInterface {
                 r.comment = getCommentString(result);
             }
         }
-        MainApp.bus().post(new EventOmnipodUpdateGui());
+        RxBus.INSTANCE.send(new EventOmnipodUpdateGui());
         return r;
     }
 
@@ -438,7 +441,7 @@ public class OmnipodPlugin extends PluginBase implements PumpInterface {
                 if (TreatmentsPlugin.getPlugin().isTempBasalInProgress()) {
                     TemporaryBasal tempStop = new TemporaryBasal().date(_pdm.GetLastResultDate()).source(Source.USER);
                     TreatmentsPlugin.getPlugin().addToHistoryTempBasal(tempStop);
-                    MainApp.bus().post(new EventOmnipodUpdateGui());
+                    RxBus.INSTANCE.send(new EventOmnipodUpdateGui());
                 }
             }
             else
@@ -518,7 +521,7 @@ public class OmnipodPlugin extends PluginBase implements PumpInterface {
         return per;
     }
 
-    @Override
+   // @Override
     public String deviceID() {
         log.debug("DeviceID()");
         return _pdm.GetPodId();
@@ -565,4 +568,25 @@ public class OmnipodPlugin extends PluginBase implements PumpInterface {
     public void executeCustomAction(CustomActionType customActionType) {
 
     }
+
+    @Override
+    public ManufacturerType manufacturer() {
+        return ManufacturerType.Insulet;
+    }
+
+    @Override
+    public PumpType model() {
+        return PumpType.Omnipy_Omnipod;
+    }
+
+    @Override
+    public String serialNumber() {
+        return InstanceId.INSTANCE.instanceId(); // TODO replace by real serial
+    }
+
+    @Override
+    public void timeDateOrTimeZoneChanged() {
+
+    }
+
 }
